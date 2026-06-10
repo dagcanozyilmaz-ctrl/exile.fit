@@ -1,89 +1,136 @@
-use std::fmt;
+use std::io::{self, Write};
 
-// --- 1. ENUMLAR ---
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 enum MuscleGroup {
-    Chest, Back, Arms, Legs, Core,
+    Chest,
+    Back,
+    Arms,
+    Legs,
+    Shoulders,
+    Core,
 }
 
-impl fmt::Display for MuscleGroup {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-// --- 2. STRUCTLAR ---
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 struct Exercise {
     name: String,
-    target_muscle: MuscleGroup,
+    muscle_group: MuscleGroup,
     sets: u32,
     reps: u32,
-    weight_kg: f32,
+    weight: f32,
 }
 
 impl Exercise {
-    fn new(name: &str, target_muscle: MuscleGroup, sets: u32, reps: u32, weight_kg: f32) -> Self {
-        Exercise {
-            name: name.to_string(),
-            target_muscle,
-            sets,
-            reps,
-            weight_kg,
-        }
-    }
     fn calculate_volume(&self) -> f32 {
-        (self.sets * self.reps) as f32 * self.weight_kg
+        (self.sets * self.reps) as f32 * self.weight
     }
 }
 
 #[derive(Debug)]
 struct WorkoutSession {
-    session_name: String,
-    exercises: Vec<Exercise>, 
+    exercises: Vec<Exercise>,
 }
 
 impl WorkoutSession {
-    fn new(name: &str) -> Self {
+    fn new() -> Self {
         WorkoutSession {
-            session_name: name.to_string(),
             exercises: Vec::new(),
         }
     }
+
     fn add_exercise(&mut self, exercise: Exercise) {
         self.exercises.push(exercise);
     }
+
+    fn total_volume(&self) -> f32 {
+        self.exercises.iter().map(|e| e.calculate_volume()).sum()
+    }
+
     fn display_summary(&self) {
-        println!("\n=========================================");
-        println!("🏋️‍♂️ ANTRENMAN ÖZETİ: {}", self.session_name);
-        println!("=========================================");
-        let mut total_session_volume = 0.0;
-        for (index, exercise) in self.exercises.iter().enumerate() {
-            let volume = exercise.calculate_volume();
-            total_session_volume += volume;
-            println!("{}. {} ({})", index + 1, exercise.name, exercise.target_muscle);
-            println!("   ↳ {} Set x {} Tekrar | Ağırlık: {} kg", exercise.sets, exercise.reps, exercise.weight_kg);
-            println!("   ↳ Bu Egzersizin Toplam Hacmi: {} kg\n", volume);
+        println!("\n--- 🏋️ Antrenman Özeti 🏋️ ---");
+        for ex in &self.exercises {
+            println!(
+                "Egzersiz: {} ({:?}) - {} Set x {} Tekrar x {} kg -> Hacim: {} kg",
+                ex.name,
+                ex.muscle_group,
+                ex.sets,
+                ex.reps,
+                ex.weight,
+                ex.calculate_volume()
+            );
         }
-        println!("-----------------------------------------");
-        println!("📊 Toplam Antrenman Hacmi: {} kg", total_session_volume);
-        println!("=========================================\n");
+        println!("Toplam Antrenman Hacmi: {} kg", self.total_volume());
+        println!("------------------------------\n");
     }
 }
 
-// --- 3. MAIN ---
+// Kullanıcıdan metin almak için yardımcı fonksiyon
+fn get_input(prompt: &str) -> String {
+    print!("{}", prompt);
+    io::stdout().flush().unwrap();
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).expect("Girdi okunamadı");
+    input.trim().to_string()
+}
+
+// Kullanıcıdan sayı almak ve hata yönetimi yapmak için fonksiyon (Sprint 3 Özelliği)
+fn get_number_input<T: std::str::FromStr>(prompt: &str) -> T {
+    loop {
+        let input = get_input(prompt);
+        match input.parse::<T>() {
+            Ok(num) => return num,
+            Err(_) => println!("⚠️ Hata: Lütfen geçerli bir sayı girin!"),
+        }
+    }
+}
+
 fn main() {
-    println!("--- Exile.Fit Fitness Takip Sistemi (2. Sprint) ---");
-    let mut bugunku_antrenman = WorkoutSession::new("Anlık Antrenman Seansı");
-    
-    // Örnek egzersizler
-    let exercise_1 = Exercise::new("Chest Press", MuscleGroup::Chest, 4, 10, 60.0);
-    let exercise_2 = Exercise::new("Lat Pulldown", MuscleGroup::Back, 4, 12, 55.0);
-    let exercise_3 = Exercise::new("Bicep Curl", MuscleGroup::Arms, 3, 12, 12.5);
+    println!("🚀 Exile.Fit - Sprint 3 Sürümüne Hoş Geldiniz!");
+    let mut session = WorkoutSession::new();
 
-    bugunku_antrenman.add_exercise(exercise_1);
-    bugunku_antrenman.add_exercise(exercise_2);
-    bugunku_antrenman.add_exercise(exercise_3);
+    loop {
+        println!("\n[1] Yeni Egzersiz Ekle");
+        println!("[2] Antrenmanı Bitir ve Özeti Gör");
+        let choice = get_input("Seçiminiz (1 veya 2): ");
 
-    bugunku_antrenman.display_summary();
+        match choice.as_str() {
+            "1" => {
+                let name = get_input("Egzersiz Adı (örn. Bench Press): ");
+                
+                println!("Kas Grupları: 1-Göğüs, 2-Sırt, 3-Kollar, 4-Bacak, 5-Omuz, 6-Core");
+                let muscle_group = loop {
+                    let mg_input = get_input("Kas Grubu (1-6): ");
+                    match mg_input.as_str() {
+                        "1" => break MuscleGroup::Chest,
+                        "2" => break MuscleGroup::Back,
+                        "3" => break MuscleGroup::Arms,
+                        "4" => break MuscleGroup::Legs,
+                        "5" => break MuscleGroup::Shoulders,
+                        "6" => break MuscleGroup::Core,
+                        _ => println!("⚠️ Hata: Lütfen 1 ile 6 arasında bir sayı girin!"),
+                    }
+                };
+
+                let sets: u32 = get_number_input("Set Sayısı: ");
+                let reps: u32 = get_number_input("Tekrar Sayısı: ");
+                let weight: f32 = get_number_input("Ağırlık (kg): ");
+
+                let exercise = Exercise {
+                    name,
+                    muscle_group,
+                    sets,
+                    reps,
+                    weight,
+                };
+
+                session.add_exercise(exercise);
+                println!("✅ Egzersiz başarıyla eklendi!");
+            }
+            "2" => {
+                session.display_summary();
+                println!("💪 Antrenman kaydedildi. Çıkış yapılıyor...");
+                break;
+            }
+            _ => println!("⚠️ Hata: Lütfen sadece 1 veya 2'yi seçin!"),
+        }
+    }
 }
