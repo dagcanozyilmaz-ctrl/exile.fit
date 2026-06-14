@@ -1,0 +1,35 @@
+[
+  {
+    "id": 101,
+    "name": "Hipertrofi - İtiş Günü",
+    "exercises": [
+      {
+        "name": "Bench Press",
+        "muscle_group": "Chest",
+        "weight": 95.0,
+        "reps": 8,
+        "sets": 4
+      },
+      {
+        "name": "Overhead Press",
+        "muscle_group": "Arms",
+        "weight": 55.0,
+        "reps": 10,
+        "sets": 3
+      }
+    ]
+  },
+  {
+    "id": 102,
+    "name": "Alt Vücut Güç Günü",
+    "exercises": [
+      {
+        "name": "Squat",
+        "muscle_group": "Legs",
+        "weight": 145.0,
+        "reps": 5,
+        "sets": 3
+      }
+    ]
+  }
+]
